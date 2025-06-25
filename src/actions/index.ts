@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { num } from "starknet";
 
 import { db } from "@/db";
-import { usersTable } from "@/db/schema";
+import { proofsTable, usersTable } from "@/db/schema";
 import { MerkleTree } from "@/generate-tree/lib";
 
 export async function handleProofAndDB(standarizedAddress: string) {
@@ -21,7 +21,7 @@ export async function handleProofAndDB(standarizedAddress: string) {
   }
   if (userRow) return { message: "User already exists" };
 
-  let allocation: bigint = BigInt(0);
+  let allocation: bigint = BigInt(5000000000000000000);
   try {
     const rows = await db
       .select()
@@ -39,7 +39,6 @@ export async function handleProofAndDB(standarizedAddress: string) {
       await db.insert(usersTable).values({
         address: standarizedAddress,
         allocation: BigInt(0),
-        proofs: "",
       });
       return { message: "User info stored (no allocation)" };
     } catch (e) {
@@ -60,11 +59,31 @@ export async function handleProofAndDB(standarizedAddress: string) {
     const proofObj = tree.address_calldata(
       BigInt(num.getDecimalString(standarizedAddress))
     );
-    await db.insert(usersTable).values({
-      address: standarizedAddress,
-      allocation: allocation,
-      proofs: JSON.stringify(proofObj.proof),
-    });
+
+    // insert user
+    const inserted = await db
+      .insert(usersTable)
+      .values({
+        address: standarizedAddress,
+        allocation: allocation,
+      })
+      .returning({ id: usersTable.id });
+
+    const userId = inserted[0]?.id;
+
+    if (!userId) {
+      return { message: "User insert failed" };
+    }
+
+    // insert proof(s)
+    const proofs = Array.isArray(proofObj.proof)
+      ? proofObj.proof
+      : [proofObj.proof];
+    const proofRows = proofs.map((proof) => ({
+      userId,
+      proof,
+    }));
+    await db.insert(proofsTable).values(proofRows);
     return { message: "Proof stored in DB" };
   } catch (e) {
     return {
