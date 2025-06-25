@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { disconnect } from "starknetkit";
 
 import { handleProofAndDB } from "@/actions";
+import Claim from "@/components/claim";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useWalletConnection } from "@/hooks/use-wallet-connection";
 import { cn, shortAddress, standariseAddress } from "@/lib/utils";
@@ -38,7 +39,7 @@ export default function Home() {
   }, [address]);
 
   return (
-    <div className=" text-4xl bg-black text-white flex items-center justify-center h-screen">
+    <div className="text-4xl text-black flex flex-col items-center justify-center h-screen w-full">
       <button
         className={cn(
           "flex h-8 items-center justify-center gap-2 rounded-lg border border-[#ECECED80] bg-[#AACBC433] text-xs font-bold text-[#03624C] focus-visible:outline-[#03624C] md:h-10 md:text-sm",
@@ -108,6 +109,8 @@ export default function Home() {
           </>
         )}
       </button>
+
+      <Claim />
     </div>
   );
 }

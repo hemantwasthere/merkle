@@ -18,8 +18,8 @@ const tree4 = new MerkleTreeSNF(
     cumulative_amount: BigInt(num.getDecimalString(x[1].toString())),
   }))
 );
-const root = num.getHexString(tree4.root.value.toString());
-console.log("Merkle Tree 4 Root:", root);
+export const merkleRoot = num.getHexString(tree4.root.value.toString());
+console.log("Merkle Tree 4 Root:", merkleRoot);
 const proof = getProof(0); // for the first value
 console.log("Merkle Proof for first leaf in Tree 4:", proof);
 
@@ -59,7 +59,7 @@ async function checkProofValidity(
 }
 
 async function main() {
-  await checkProofValidity(values[0][0], values[0][1], proof, root);
+  await checkProofValidity(values[0][0], values[0][1], proof, merkleRoot);
 }
 
 main();

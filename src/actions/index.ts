@@ -6,6 +6,7 @@ import { num } from "starknet";
 import { db } from "@/db";
 import { proofsTable, usersTable } from "@/db/schema";
 import { MerkleTree } from "@/generate-tree/lib";
+import { merkleRoot } from "@/generate-tree/merkle";
 
 export async function handleProofAndDB(standarizedAddress: string) {
   // check if user already exists in DB
@@ -21,7 +22,7 @@ export async function handleProofAndDB(standarizedAddress: string) {
   }
   if (userRow) return { message: "User already exists" };
 
-  let allocation: bigint = BigInt(5000000000000000000);
+  let allocation: bigint = BigInt(5000000000000000000); // TODO: replace with actual allocation logic later
   try {
     const rows = await db
       .select()
@@ -90,4 +91,28 @@ export async function handleProofAndDB(standarizedAddress: string) {
       message: "Proof generation/store failed: " + (e as Error).message,
     };
   }
+}
+
+export async function getUserClaimData(standarizedAddress: string) {
+  const userRows = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.address, standarizedAddress));
+  const user = userRows[0];
+  if (!user) return null;
+
+  const proofRows = await db
+    .select()
+    .from(proofsTable)
+    .where(eq(proofsTable.userId, user.id));
+  const proofs = proofRows.map((row) => row.proof);
+
+  return {
+    allocation: user.allocation,
+    proofs,
+  };
+}
+
+export async function getMerkleRoot() {
+  return merkleRoot;
 }
